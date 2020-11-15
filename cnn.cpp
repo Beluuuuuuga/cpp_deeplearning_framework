@@ -42,8 +42,15 @@ using namespace std;
 // }
 
 void convolution(const float* x, const float* weight, const float* bias, int width, int height,
-            int in_channels, int out_channels, int ksize, float* y) {
+            int in_channels, int filtersize, int ksize, float* y) {
+    for (int filter_n = 0; filter_n < filtersize; ++filter_n) {
+        // 今回はゼロパディングを予定してるので幅・高さは変更なし
+        for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
 
+            }
+        }
+    }
 }
 
 
