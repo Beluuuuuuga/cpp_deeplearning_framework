@@ -1,5 +1,33 @@
 #include <iostream>
+#include <stdlib.h> /*rand関数を使う宣言*/
+#include <time.h> /*time関数の使用宣言*/
 using namespace std;
+
+
+void relu(const float *x, int size, float *y) {
+  for (int i = 0; i < size; ++i) {
+    y[i] = std::max(x[i], .0f);
+  }
+}
+
+
+void maxpooling(const float *x, int width, int height, int channels, int stride, float *y) {
+  for (int ch = 0; ch < channels; ++ch) {
+    for (int h = 0; h < height; h += stride) {
+      for (int w = 0; w < width; w += stride) {
+        float maxval = -INT8_MAX;
+
+        for (int bh = 0; bh < stride; ++bh) {
+          for (int bw = 0; bw < stride; ++bw) {
+            maxval = std::max(maxval, x[(ch * height + h + bh) * width + w + bw]);
+          }
+        }
+
+        y[(ch * (height / stride) + (h / stride)) * (width / stride) + w / stride] = maxval;
+      }
+    }
+  }
+}
 
 
 void calcu_convolution(const float* x, const float* weight, int height, int width, int filter_n, int h, int w,int input_channels, int ksize, float sum){
@@ -47,15 +75,30 @@ int main(){
     static const int kWidths[] = {28, 14, 7};
     static const int kHeights[] = {28, 14, 7};
     static const int kChannels[] = {1, 4, 8, 32, 10};
-    float x1[kWidths[0] * kHeights[0] * kChannels[1]]; // 出力->y
-    float x2[kWidths[0] * kHeights[0] * kChannels[1]];
-    float x3[kWidths[1] * kHeights[1] * kChannels[1]];
+    float x1[kWidths[0] * kHeights[0] * kChannels[1]]; // 出力
+    float x2[kWidths[0] * kHeights[0] * kChannels[1]]; // 出力
+    float x3[kWidths[1] * kHeights[1] * kChannels[1]]; // 出力
 
     // float x[1*28]
-    const float x[1*28*28] = {};
+    const float x[1*28*28] = {1,255};
     const float weight0[4*1*3*3] = {};
     const float bias0[4] = {};
 
+    // srand((unsigned int)time(NULL)); /*乱数の初期化*/
+    // srand(time(NULL));
+
+    for(int i = 0; i < 28*28 ; i++)
+    {
+        cout << x[i] << endl;
+    }
+
     convolution(x, weight0, bias0, kWidths[0], kHeights[0], kChannels[0], kChannels[1], 3, x1);
-            
+    relu(x1, kWidths[0] * kHeights[0] * kChannels[1], x2);
+    maxpooling(x2, kWidths[0], kHeights[0], kChannels[1], 2, x3); // stride=>2
+
+
+    // for (int i=0; i<14*14*4; ++i){
+    //     cout << x3[i] << endl;
+    // }
+
 }
