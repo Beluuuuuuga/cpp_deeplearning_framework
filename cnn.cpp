@@ -41,13 +41,40 @@ using namespace std;
 //     // return 5;
 // }
 
+void calcu_convolution(const float* x, const float* weight, int height, int width, int filter_n, int h, int w,int input_channels, int ksize, float sum){
+    for (int ich = 0; ich < input_channels; ++ich) {
+        for (int kh = 0; kh < ksize; ++kh) {
+            for (int32_t kw = 0; kw < ksize; ++kw) {
+
+                // offsetを計算 ksize3/2->1, ksize5/2->2
+                int ph = h + kh - ksize/2;
+                int pw = w + kw - ksize/2;
+
+                // 画像はみ出さないように調整している
+                if (ph < 0 || ph >= height || pw < 0 || pw >= width) {
+                    continue;
+                }
+
+                int pix_idx = (ich * height + ph) * width + pw;
+                // 多次元を1次元に変換して計算している
+                int weight_idx = ((filter_n * input_channels + ich) * ksize + kh) * ksize + kw;
+
+                sum += x[pix_idx] * weight[weight_idx];
+            }
+        }
+    }
+}
+
 void convolution(const float* x, const float* weight, const float* bias, int width, int height,
-            int in_channels, int filtersize, int ksize, float* y) {
+            int input_channels, int filtersize, int ksize, float* y) {
     for (int filter_n = 0; filter_n < filtersize; ++filter_n) {
         // 今回はゼロパディングを予定してるので幅・高さは変更なし
         for (int h = 0; h < height; ++h) {
             for (int w = 0; w < width; ++w) {
+                float sum = 0.f;
 
+                calcu_convolution(x, weight, height, width, filter_n, h, w, input_channels, ksize, sum);
+                
             }
         }
     }
