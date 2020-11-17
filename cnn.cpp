@@ -4,6 +4,17 @@
 using namespace std;
 
 
+void linear(const float *x, const float* weight, const float* bias,
+            int in_features, int out_features, float *y) {
+  for (int i = 0; i < out_features; ++i) {
+    float sum = 0.f;
+    for (int j = 0; j < in_features; ++j) {
+      sum += x[j] * weight[i * in_features + j];
+    }
+    y[i] = sum + bias[i];
+  }
+}
+
 void relu(const float *x, int size, float *y) {
   for (int i = 0; i < size; ++i) {
     y[i] = std::max(x[i], .0f);
@@ -33,7 +44,7 @@ void maxpooling(const float *x, int width, int height, int channels, int stride,
 void calcu_convolution(const float* x, const float* weight, int height, int width, int filter_n, int h, int w,int input_channels, int ksize, float sum){
     for (int ich = 0; ich < input_channels; ++ich) {
         for (int kh = 0; kh < ksize; ++kh) {
-            for (int32_t kw = 0; kw < ksize; ++kw) {
+            for (int kw = 0; kw < ksize; ++kw) {
 
                 // offsetを計算 ksize3/2->1, ksize5/2->2
                 int ph = h + kh - ksize/2;
@@ -78,11 +89,23 @@ int main(){
     float x1[kWidths[0] * kHeights[0] * kChannels[1]]; // 出力
     float x2[kWidths[0] * kHeights[0] * kChannels[1]]; // 出力
     float x3[kWidths[1] * kHeights[1] * kChannels[1]]; // 出力
+    float x4[kWidths[1] * kHeights[1] * kChannels[2]]; // 出力
+    float x5[kWidths[1] * kHeights[1] * kChannels[2]]; // 出力
+    float x6[kWidths[2] * kHeights[2] * kChannels[2]]; // 出力
+    float x7[kChannels[3]]; // 出力
+    float x8[kChannels[3]]; // 出力
+    float y[10]; // 出力
 
     // float x[1*28]
-    const float x[1*28*28] = {1,255};
+    const float x[1*28*28] = {};
     const float weight0[4*1*3*3] = {};
     const float bias0[4] = {};
+    const float weight1[8*4*3*3] = {};
+    const float bias1[8] = {};
+    const float weight2[32*8*7*7] = {};
+    const float bias2[8] = {};
+    const float weight3[10*32] = {};
+    const float bias3[10] = {};
 
     // srand((unsigned int)time(NULL)); /*乱数の初期化*/
     // srand(time(NULL));
@@ -92,11 +115,22 @@ int main(){
         cout << x[i] << endl;
     }
 
+    // 1
     convolution(x, weight0, bias0, kWidths[0], kHeights[0], kChannels[0], kChannels[1], 3, x1);
     relu(x1, kWidths[0] * kHeights[0] * kChannels[1], x2);
     maxpooling(x2, kWidths[0], kHeights[0], kChannels[1], 2, x3); // stride=>2
 
+    // 2
+    convolution(x3, weight1, bias1, kWidths[1], kHeights[1], kChannels[1], kChannels[1], 3, x4);
+    relu(x4, kWidths[1] * kHeights[1] * kChannels[2], x5);
+    maxpooling(x5, kWidths[1], kHeights[1], kChannels[2], 2, x6); // stride=>2
 
+    // 3
+    linear(x6, weight2, bias2, kWidths[2] * kHeights[2] * kChannels[2], kChannels[3], x7);
+    relu(x7, kChannels[3], x8);
+
+    // 4
+    linear(x8, weight3, bias3, kChannels[3], kChannels[4], y);
     // for (int i=0; i<14*14*4; ++i){
     //     cout << x3[i] << endl;
     // }
