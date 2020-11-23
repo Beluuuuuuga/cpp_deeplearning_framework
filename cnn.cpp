@@ -41,7 +41,7 @@ void maxpooling(const float *x, int width, int height, int channels, int stride,
 }
 
 
-void calcu_convolution(const float* x, const float* weight, int height, int width, int filter_n, int h, int w,int input_channels, int ksize, float sum){
+float calcu_convolution(const float* x, const float* weight, int height, int width, int filter_n, int h, int w,int input_channels, int ksize, float sum){
     for (int ich = 0; ich < input_channels; ++ich) {
         for (int kh = 0; kh < ksize; ++kh) {
             for (int kw = 0; kw < ksize; ++kw) {
@@ -63,6 +63,7 @@ void calcu_convolution(const float* x, const float* weight, int height, int widt
             }
         }
     }
+    return sum;
 }
 
 void convolution(const float* x, const float* weight, const float* bias, int width, int height,
@@ -73,7 +74,10 @@ void convolution(const float* x, const float* weight, const float* bias, int wid
             for (int w = 0; w < width; ++w) {
                 float sum = 0.f;
 
-                calcu_convolution(x, weight, height, width, filter_n, h, w, input_channels, ksize, sum);
+                sum = calcu_convolution(x, weight, height, width, filter_n, h, w, input_channels, ksize, sum);
+                
+                sum += bias[filter_n];
+                y[(filter_n * height + h) * width + w] = sum;
 
             }
         }
@@ -97,9 +101,13 @@ int main(){
     float y[10]; // 出力
 
     // float x[1*28]
-    const float x[1*28*28] = {};
-    const float weight0[4*1*3*3] = {};
-    const float bias0[4] = {};
+    // const float x[1*28*28] = {};
+    float x[1*28*28];
+    // float x[1][28][28];
+    // const float weight0[4*1*3*3] = {1};
+    float weight0[4*1*3*3];
+    // float weight0[4][1][3][3];
+    const float bias0[4] = {10,10,10,10};
     const float weight1[8*4*3*3] = {};
     const float bias1[8] = {};
     const float weight2[32*8*7*7] = {};
@@ -112,7 +120,11 @@ int main(){
 
     for(int i = 0; i < 28*28 ; i++)
     {
-        cout << x[i] << endl;
+        x[i] = i;
+    }
+    for(int i = 0; i < 4*3*3 ; i++)
+    {
+        weight0[i] = i;
     }
 
     // 1
@@ -131,8 +143,9 @@ int main(){
 
     // 4
     linear(x8, weight3, bias3, kChannels[3], kChannels[4], y);
-    // for (int i=0; i<14*14*4; ++i){
-    //     cout << x3[i] << endl;
-    // }
+    
+    for (int i=0; i<14*14*4; ++i){
+        cout << y[i] << endl;
+    }
 
 }
