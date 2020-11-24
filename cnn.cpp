@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h> /*rand関数を使う宣言*/
 #include <time.h> /*time関数の使用宣言*/
+#include <fstream>
 using namespace std;
 
 
@@ -86,6 +87,12 @@ void convolution(const float* x, const float* weight, const float* bias, int wid
 
 
 int main(){
+    int i, n;
+    FILE *fp;
+ 
+    // mnistの画像
+    fp = fopen("sample_mnist_1-3_float.txt", "r");     /*  読み込みモードでファイルをオープン  */
+
     // 変数作成
     static const int kWidths[] = {28, 14, 7};
     static const int kHeights[] = {28, 14, 7};
@@ -103,29 +110,30 @@ int main(){
     // float x[1*28]
     // const float x[1*28*28] = {};
     float x[1*28*28];
-    // float x[1][28][28];
-    // const float weight0[4*1*3*3] = {1};
     float weight0[4*1*3*3];
-    // float weight0[4][1][3][3];
-    const float bias0[4] = {10,10,10,10};
-    const float weight1[8*4*3*3] = {};
-    const float bias1[8] = {};
-    const float weight2[32*8*7*7] = {};
-    const float bias2[8] = {};
-    const float weight3[10*32] = {};
-    const float bias3[10] = {};
+    float bias0[4] = {10,10,10,10};
+    float weight1[8*4*3*3] = {};
+    float bias1[8] = {};
+    float weight2[32*8*7*7] = {};
+    float bias2[8] = {};
+    float weight3[10*32] = {};
+    float bias3[10] = {};
 
     // srand((unsigned int)time(NULL)); /*乱数の初期化*/
     // srand(time(NULL));
 
-    for(int i = 0; i < 28*28 ; i++)
-    {
-        x[i] = i;
+    // mnist画像読み込み
+    for(i=0; i < 28*28; i++){
+        fscanf(fp, "%f", &(x[i]));
     }
-    for(int i = 0; i < 4*3*3 ; i++)
-    {
-        weight0[i] = i;
-    }
+ 
+    fclose(fp);
+
+
+    // for(int i = 0; i < 4*3*3 ; i++)
+    // {
+    //     weight0[i] = i*100;
+    // }
 
     // 1
     convolution(x, weight0, bias0, kWidths[0], kHeights[0], kChannels[0], kChannels[1], 3, x1);
@@ -147,5 +155,6 @@ int main(){
     for (int i=0; i<14*14*4; ++i){
         cout << y[i] << endl;
     }
+    return 0;
 
 }
