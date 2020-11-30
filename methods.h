@@ -1,11 +1,14 @@
 
 #include <stdlib.h> /*rand関数を使う宣言*/
 #include <iostream>
+#include <math.h>
 
 void linear(const float *x, const float* weight, const float* bias,
             int in_features, int out_features, float *y);
 
 void relu(const float *x, int size, float *y);
+
+void softmax(float *y, float *y2);
 
 void maxpooling(const float *x, int width, int height, int channels, int stride, float *y);
 

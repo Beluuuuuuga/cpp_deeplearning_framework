@@ -18,6 +18,17 @@ void relu(const float *x, int size, float *y) {
   }
 }
 
+void softmax(float *y, float *y2){
+  float output_sum = 0;
+  for (int i = 0; i < 10; ++i){
+    y2[i] = exp(y[i]);
+    output_sum += y2[i];
+  }
+  for (int i = 0; i < 10; ++i){
+    y2[i] = y2[i]/output_sum;
+  }
+}
+
 
 void maxpooling(const float *x, int width, int height, int channels, int stride, float *y) {
   for (int ch = 0; ch < channels; ++ch) {
