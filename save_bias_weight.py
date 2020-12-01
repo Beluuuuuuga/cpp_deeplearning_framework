@@ -46,4 +46,16 @@ if __name__ == "__main__":
     b2 = np.array(model.get_weights()[5]).ravel()
     b3 = np.array(model.get_weights()[7]).ravel()
 
+    # txt保存
+    # 重み
+    np.savetxt('data/w0.txt',transposed_w0, fmt='%f4') # float32
+    np.savetxt('data/w1.txt',transposed_w1, fmt='%f4') # float32
+    np.savetxt('data/w2.txt',w2, fmt='%f4') # float32
+    np.savetxt('data/w3.txt',w3, fmt='%f4') # float32
+    # バイアス
+    np.savetxt('data/b0.txt',b0, fmt='%f4') # float32
+    np.savetxt('data/b1.txt',b1, fmt='%f4') # float32
+    np.savetxt('data/b2.txt',b2, fmt='%f4') # float32
+    np.savetxt('data/b3.txt',b3, fmt='%f4') # float32
+
     
