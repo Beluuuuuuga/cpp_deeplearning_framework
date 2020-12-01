@@ -31,10 +31,10 @@ if __name__ == "__main__":
     train_images_regularized, test_images_regularized = train_images / 255.0, test_images / 255.0
 
     model = base_model()
-    model.fit(train_images_regularized, train_labels, epochs=1)
+    model.fit(train_images_regularized, train_labels, epochs=5)
     test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=1)
     print(test_acc)
 
     model.save("models/base_model.hdf5")
-    
+
     loaded_model = load_model("models/base_model.hdf5")
