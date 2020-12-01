@@ -16,12 +16,13 @@ def make_benchmark_sample():
     sample = train_images_regularized[0]
 
     # PNG形式
-    sample_png = sample.reshape((28, 28))
+    sample_png = sample*255
+    sample_png = sample_png.reshape((28, 28))
     cv2.imwrite('data/sample.png',sample_png)
 
     # TXT形式
     sample_txt = sample.ravel()
-    np.savetxt('data/tmp.txt',sample_txt, fmt='%f4')
+    np.savetxt('data/sample.txt',sample_txt, fmt='%f4')
 
     # Numpy形式
     sample_np = sample.reshape((1, 28, 28, 1))
