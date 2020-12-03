@@ -28,8 +28,10 @@ if __name__ == "__main__":
     print("dense2 shape:",w3.shape)
 
     # TF形式=>My推論モデル
-    transposed_w0 = convert_conv(w0)
-    transposed_w1 = convert_conv(w1)
+    transposed_w0 = convert_conv(w0)  # 16, 1, 3, 3
+    transposed_w1 = convert_conv(w1)  # 32, 16, 3, 3
+    w2 = np.transpose(w2, axes=[1,0]) # 1024, 1568
+    w3 = np.transpose(w3, axes=[1,0]) # 10, 1024
 
     print("transposed conv1 shape:",transposed_w0.shape)
     print("transposed conv2 shape:",transposed_w1.shape)
@@ -39,6 +41,8 @@ if __name__ == "__main__":
     # My推論モデル=>1次元
     transposed_w0 = transposed_w0.ravel()
     transposed_w1 = transposed_w1.ravel()
+    w2 = w2.ravel() # 1605632 
+    w3 = w3.ravel() # 10240
 
     # バイアス
     b0 = np.array(model.get_weights()[1]).ravel()
