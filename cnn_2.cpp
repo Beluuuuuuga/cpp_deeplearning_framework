@@ -22,21 +22,13 @@ int main(){
 
     /*  読み込みモードでファイルをオープン  */
     // mnistの画像
-    // fp = fopen("data/sample_mnist_1-3_float.txt", "r");
-    // fp = fopen("data/sample_1.txt", "r");
-    fp = fopen("data/sample_1_2.txt", "r");
+    fp = fopen("data/sample.txt", "r");
     
     // weights
-    // w0_fp = fopen("data/w0.txt", "r");
-    // w1_fp = fopen("data/w1.txt", "r");
-    // w2_fp = fopen("data/w2.txt", "r");
-    // w3_fp = fopen("data/w3.txt", "r");
-
-    // weights_2
-    w0_fp = fopen("data/w0_2.txt", "r");
-    w1_fp = fopen("data/w1_2.txt", "r");
-    w2_fp = fopen("data/w2_2.txt", "r");
-    w3_fp = fopen("data/w3_2.txt", "r");
+    w0_fp = fopen("data/w0.txt", "r");
+    w1_fp = fopen("data/w1.txt", "r");
+    w2_fp = fopen("data/w2.txt", "r");
+    w3_fp = fopen("data/w3.txt", "r");
 
     // bias
     b0_fp = fopen("data/b0.txt", "r");
@@ -54,18 +46,19 @@ int main(){
     float x4[kWidths[1] * kHeights[1] * kChannels[2]]; // 出力
     float x5[kWidths[1] * kHeights[1] * kChannels[2]]; // 出力
     float x6[kWidths[2] * kHeights[2] * kChannels[2]]; // 出力
+    float x6_2[kWidths[2] * kHeights[2] * kChannels[2]]; // 出力
     float x7[kChannels[3]]; // 出力
     float x8[kChannels[3]]; // 出力
-    float y[10]; // 出力
-    float y2[10]; // 出力
+    float y[kChannels[4]]; // 出力
+    float activated_y[kChannels[4]]; // 出力
 
     float x[1*28*28]; // input image data
 
     // weight
     float weight0[16*1*3*3]; // 144, conv_1
     float weight1[32*16*3*3]; // 4608, conv_2
-    float weight2[1024*32*7*7]; // 1605632, fcc
-    float weight3[1024*10]; // 10240, output
+    float *weight2 = (float *)malloc(sizeof(float)*(1024*32*7*7 + 1)); // 1605632, dense1
+    float weight3[1024*10]; // 10240, dense2
 
     // bias
     float bias0[16]; // 16, conv_1
@@ -77,9 +70,6 @@ int main(){
     for(i=0; i < 28*28; i++){
         fscanf(fp, "%f", &(x[i]));
     }
-    // for(i=28*28; i < 28*28*2; i++){
-    //     fscanf(fp, "%f", &(x[i]));
-    // }
 
     // weight読み込み
     for(i=0; i < 16*1*3*3; i++){
@@ -92,7 +82,7 @@ int main(){
         fscanf(w2_fp, "%f", &(weight2[i]));
     }
     for(i=0; i < 1024*10; i++){
-        fscanf(w3_fp, "%f", &(weight2[i]));
+        fscanf(w3_fp, "%f", &(weight3[i]));
     }
 
     // bias読み込み
@@ -121,27 +111,29 @@ int main(){
     relu(x4, kWidths[1] * kHeights[1] * kChannels[2], x5);
     maxpooling(x5, kWidths[1], kHeights[1], kChannels[2], 2, x6); // stride=>2
 
+    // 出力転置 ex: 16,1,3,3=>3,1,3,16
+    int cnt = 0;
+    for (int i=0; i<7*7; ++i){
+        for (int j=0; j<32; ++j){
+            x6_2[cnt] = x6[i+j*49];
+            ++cnt;
+        }
+    }
+
     // 3
-    linear(x6, weight2, bias2, kWidths[2] * kHeights[2] * kChannels[2], kChannels[3], x7);
+    linear(x6_2, weight2, bias2, kWidths[2] * kHeights[2] * kChannels[2], kChannels[3], x7); // 7*7*32=>1568 , 1024
+    free(weight2); 
     relu(x7, kChannels[3], x8);
 
     // 4
     linear(x8, weight3, bias3, kChannels[3], kChannels[4], y);
     
-    // for (int i=0; i<10; ++i){
-    //     cout << y[i] << endl;
-    // }
-
     cout << endl;
-    softmax(y, y2);
+    softmax(y,activated_y);
+
     for (int i=0; i<10; ++i){
-        cout << y2[i] << endl;
+        cout << activated_y[i] << endl;
     }
-    // cout << endl;
-    // for (int i=0; i<28*28; ++i){
-    //     // cout <<  << endl;
-    //     cout << x[i] << endl;
-    // }
 
     return 0;
 
