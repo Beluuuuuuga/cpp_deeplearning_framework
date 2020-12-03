@@ -16,3 +16,5 @@ float calcu_convolution(const float* x, const float* weight, int height, int wid
 
 void convolution(const float* x, const float* weight, const float* bias, int width, int height,
             int input_channels, int filtersize, int ksize, float* y);
+
+void argmax(float *activated_y, int &max_index);

@@ -1,4 +1,5 @@
 #include "methods.h"
+#include <iostream>
 
 void linear(const float *x, const float* weight, const float* bias,
             int in_features, int out_features, float *y) {
@@ -89,4 +90,14 @@ void convolution(const float* x, const float* weight, const float* bias, int wid
             }
         }
     }
+}
+
+void argmax(float *activated_y, int &max_index){
+  float max_num = -10000.0;
+  for (int i = 0; i < 10; ++i){
+    if (activated_y[i] > max_num){
+      max_index = i;
+      max_num = activated_y[i];
+    }
+  }
 }

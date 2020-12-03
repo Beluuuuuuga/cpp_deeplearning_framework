@@ -128,13 +128,21 @@ int main(){
     // 4
     linear(x8, weight3, bias3, kChannels[3], kChannels[4], y);
     
-    cout << endl;
     softmax(y,activated_y);
 
+    // softmax出力確率確認
+    cout << "\t---確率分布---" << endl;
     for (int i=0; i<10; ++i){
-        cout << activated_y[i] << endl;
+        cout << "\t" << i << "の確率:" << activated_y[i] << endl;
     }
 
-    return 0;
+    int max_index;
+    argmax(activated_y, max_index);
 
+    // 推論結果
+    cout << endl;
+    cout << "\t---推論結果---" << endl;
+    cout << "\t予測データクラス:" << max_index << endl;
+
+    return 0;
 }
