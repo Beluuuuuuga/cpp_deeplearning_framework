@@ -1,4 +1,3 @@
-
 #include "methods.h"
 
 void linear(const float *x, const float* weight, const float* bias,
