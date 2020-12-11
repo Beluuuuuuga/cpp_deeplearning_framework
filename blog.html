@@ -1,0 +1,130 @@
+<h1>【Tensorflow・Keras】Tensorflow・Kerasのレイヤーごとの重みパラメータの取得と計算について</h1>
+
+<p>代表的な深層学習のフレームワークはTensorFlow, Keras, PyTorch, Chainerが挙げられます。今回はその中でも、TensorFlow(以下TF)・Kerasのバージョン2の畳み込みニューラルネットワークワーク(以下CNN)のレイヤーごとの重み・出力の取得方法と計算方法について考えたいと思います。</p>
+<p>この記事は<a href="https://qiita.com/advent-calendar/2020/tensorflow">TensorFlow Advent Calendar 2020の12日目</a>の記事です。</p>
+
+<h2>この記事を読んだら理解できること</h2>
+<ul>
+    <li>CNNの計算方法やCNNでの画像サイズ・インプットチャネル・アウトプットチャネル(フィルターの数)・フィルターサイズの計算イメージ</li>
+    <li>TF・KerasでのCNNのレイヤーごとの重み・出力の取得方法と計算方法</li>
+    <li>自作推論でのCNNの実装イメージ</li>
+    <li>ゼロから作るDeepLearning①のCNNのページ(200ページ辺り)が実装から理解できる</li>
+</ul>
+
+<h2>どういうときに使用するのか</h2>
+<ul>
+    <li>TF・KerasでのCNNのレイヤーごとの重み・出力を確認するケース</li>
+    <li>TF・Kerasの学習済み重みを利用してCやJavaなど他言語で自作推論に適用するケース</li>
+</ul>
+
+<h2>環境</h2>
+<p>OSなど特に指定ありません。</p>
+<ul>
+    <li>Python 3.7.6(バージョン制約ありません。TF2.3が比較的最新のバージョンなので、できるだけPythonも新しいバージョンをおすすめします。)</li>
+    <li>Windows・Linux(Ubuntu)(WindowsならAnaconda・Docker、LinuxならDockerが一般的だと思います。もちろんGoogleColabなどでも大丈夫です。)</li>
+</ul>
+
+<h2>ライブラリ</h2>
+<p>以下のPython Package(pip)は事前にインストールしていてください。GoogleColabなどでは既にインストール済みかと思います。</p>
+<ul>
+    <li>tensorflow-gpu 2.3.0(自分の環境ではGPUを使用してますが、GPUなしでもTFのバージョンが同じなら問題ありません。)</li>
+    <li>numpy 1.19.4(バージョン制約ありませんが、できるだけ新しい方が良いです。)</li>
+    <li>opencv-python 4.1.1.26(4系であれば、マイナーバージョン制約ありません。)</li>
+</ul>
+
+<h2>概略</h2>
+<p>はじめにまとめを書きます。今回は以下のフローで本記事のテーマを実現します。</p>
+<ol>
+    <li>重みとCNNについて理解</li>
+    <li>TF・KerasでMNISTデータを用いて簡単なモデルを学習</li>
+    <li>TF・Kerasでのレイヤーごとの重みと出力について理解</li>
+    <li>CNN2層目の出力をCNN1層目重み・バイアス・出力から再現</li>
+</ol>
+
+
+<h3>1. 重みとCNNについて理解</h3>
+<p>重みとCNNについて紹介します。ここでは概略だけに留めたいと思います。</p>
+<p>詳しくは別記事で記載予定です。</p>
+
+<h4>重みについて</h4>
+<p>TF・Kerasで保存されるCNNにおける重みとはフィルターの数値であり、学習により最適化され保存されます。</p>
+<p>model.save()などでで保存される値が上の数値であることをまずは理解してください。
+
+<h4>CNNの計算について</h4>
+<p>CNNにおいて混乱しやすい部分がチャネルなので、まずは4つのパターンでCNN計算の概略を掴んでもらいます。</p>
+<ol>
+    <li>インプットのチャネル1、<font color="RED">フィルターの数1</font>＝＞<font color="RED">アウトプットのチャネル1</font></li>
+    <li>インプットのチャネル3、<font color="RED">フィルターの数1</font>＝＞<font color="RED">アウトプットのチャネル1</font></li>
+    <li>インプットのチャネル1、<font color="RED">フィルターの数3</font>＝＞<font color="RED">アウトプットのチャネル3</font></li>
+    <li>インプットのチャネル3、<font color="RED">フィルターの数3</font>＝＞<font color="RED">アウトプットのチャネル3</font></li>
+</ol>
+<p>4つのパターン全てでフィルターの数がアウトプットのチャネルであることがわかります。フィルター1つ1つが画像加工アプリなどの加工と思えば想像しやすいかと思います。ここでは、入ってくる画像のチャネルは関係なく、様々なフィルター（加工）を適用し、アウトプットの画像を取得できるといった想像ができれば十分です。</p>
+<p>グレースケールの画像やRGBの画像に加工を適用すれば、グレースケール・RGB関係なく出力される画像は加工した数でてきますよね？この辺りは、かの有名なゼロから作るDeepLearning①の200ページ辺りにも記載されているので、気になる方はそちらの書籍もチェックしてみてください。</p>
+<p></p>
+<p></p>
+<p></p>
+
+<h3>2. TF・KerasでMNISTデータを用いて簡単なモデルを学習</h3>
+
+<pre>
+<code>
+import cv2
+import numpy as np
+
+import tensorflow as tf
+from tensorflow.keras import datasets, layers, models
+from tensorflow.keras.models import Sequential, Model, load_model
+from tensorflow.keras.layers import Dense, Conv2D, Flatten, Dropout, MaxPooling2D, Convolution2D, Activation
+
+
+def base_model():
+    model = models.Sequential()
+    model.add(layers.Conv2D(16, (3, 3), activation='relu', padding="same", input_shape=(28, 28, 1), name='conv1')) # test1
+    model.add(layers.MaxPooling2D((2, 2), name='maxpool1')) # test2
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', padding="same", name='conv2')) # test3
+    model.add(layers.MaxPooling2D((2, 2), name='maxpool2')) # test4
+    model.add(Flatten(name='flatten1')) 
+
+    model.add(Dense(1024, activation='relu', name='dense1')) # test5
+    model.add(layers.Dense(10, activation='softmax', name='dense2')) # test6
+    model.compile(optimizer='adam',loss='sparse_categorical_crossentropy',metrics=['accuracy'])
+
+    return model
+
+if __name__ == "__main__":
+    (train_images, train_labels), (test_images, test_labels) = datasets.mnist.load_data()
+
+    train_images = train_images.reshape((60000, 28, 28, 1))
+    test_images = test_images.reshape((10000, 28, 28, 1))
+
+    # ピクセルの値を 0~1 の間に正規化
+    train_images_regularized, test_images_regularized = train_images / 255.0, test_images / 255.0
+
+    model = base_model()
+    model.fit(train_images_regularized, train_labels, epochs=5)
+    test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=1)
+    print(test_acc)
+
+    model.save("models/base_model.hdf5")
+
+    loaded_model = load_model("models/base_model.hdf5")
+</code>
+</pre>
+
+<p></p>
+<p></p>
+<p></p>
+
+<h3>3. TF・Kerasでのレイヤーごとの重みと出力について理解</h3>
+<p></p>
+<p></p>
+<p></p>
+
+<h3>4. CNN2層目の出力をCNN1層目重み・バイアス・出力から再現</h3>
+
+
+
+<h2>まとめ</h2>
+<p>学習済み重みからC言語での推論まで記載したかったのですが、時間の都合上断念です。</p>
+<p>次回は、推論部分について書きたいと思います。</p>
+<p></p>
